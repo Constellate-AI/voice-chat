@@ -20,7 +20,7 @@ export const PromptForm: FC<Partial<UseChatHelpers>> = ({
                     onChange={handleInputChange}
                 />
                 <form onSubmit={handleSubmit} className={'cursor-pointer'}>
-                    <Button className={'cursor-pointer'} >
+                    <Button className={'cursor-pointer z-10'} >
                         <SendIcon className={'w-5 h-5'}/>
                         <span className={'sr-only'}>Send</span>
                     </Button>

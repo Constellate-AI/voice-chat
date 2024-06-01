@@ -15,14 +15,14 @@ export default function Home() {
     return (
 
         //  Header Bar
-        <main className={'flex min-h-screen flex-col items-center justify-between w-screen'}>
+        <main className={'flex min-h-screen max-h-screen flex-col items-center justify-between w-screen'}>
             <header className={'bg-gray-900 text-white py-4 px-6 flex items-center justify-between w-full'}>
                 <h1 className={'text-xl font-bold'}> Private Siri</h1>
                 <div className={'flex flex-row items-center gap-4'}>
-                    <Button variant={'ghost'} size={'icon'}>
+                    {/*<Button variant={'ghost'} size={'icon'}>
                         <SettingsIcon className={'h-5 w-5'}/>
                         <span className={'src-only'}>Settings</span>
-                    </Button>
+                    </Button>*/}
                     <Avatar className={'w-8 h-8 border'} style={inter.style}>
                         <AvatarImage src={'/placeholder.svg'} alt={'avatar'}/>
                         <AvatarFallback className={'text-gray-900'}>KM</AvatarFallback>
