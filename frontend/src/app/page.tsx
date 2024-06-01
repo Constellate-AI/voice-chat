@@ -1,16 +1,21 @@
 'use client'
-import Image from "next/image";
-import {Button} from '@/components/ui/button'
 import {Avatar, AvatarFallback, AvatarImage} from '@/components/ui/avatar'
-import {SettingsIcon} from 'lucide-react'
 import {inter} from '@/lib/fonts'
 import {ChatMessageList} from '@/components/chat-message-list'
-import {nanoid} from 'ai'
 import {PromptForm} from '@/components/prompt-form'
 import {useChat} from 'ai/react'
+import {nanoid} from 'ai'
+
 
 export default function Home() {
-    const { messages, input, handleInputChange, handleSubmit } = useChat();
+    const { messages, input, handleInputChange, handleSubmit } = useChat({
+        initialMessages: [{
+            role: 'assistant',
+            content: 'Hi! I\'m a conversational AI model. You can talk to me through your microphone - just make sure that your volume is turned up!',
+            id: nanoid(12)
+        }]
+    });
+
 
     return (
 
