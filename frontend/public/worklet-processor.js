@@ -1,10 +1,5 @@
-/**
- * Do audio processing using the AudioWorkletProcessor web API. This is a standard web API, BUT, Typescript does not
- * include the interfaces for it. So, this file is JavaScript
- */
-
 const SILENCE_THRESHOLD = 0.015;
-const SAMPLE_RATE = 48000;
+const SAMPLE_RATE = 24000;
 const CHANNEL_DATA_LENGTH = 128;
 const MAX_SEGMENT_LENGTH = 10; // seconds
 const MIN_TALKING_TIME = 2; // seconds
@@ -107,4 +102,3 @@ class WorkletProcessor extends AudioWorkletProcessor {
 }
 
 registerProcessor("worklet-processor", WorkletProcessor);
-export default WorkletProcessor;

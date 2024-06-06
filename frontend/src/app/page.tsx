@@ -9,7 +9,7 @@ import {useMachine} from "@xstate/react"
 import {chatMachine, StateMachineEvent, StateMachineState} from '@/lib/state-machine'
 import {useCallback, useEffect, useRef, useState} from 'react'
 import {fetchTranscript} from '@/lib/audio/transcription'
-import WorkletNode from '@/lib/audio/worklet-node'
+//import WorkletNode from '@/lib/audio/worklet-node'
 import {PlayQueue} from '@/lib/audio/tts-play-queue'
 import {INDICATOR_TYPE} from '@/lib/audio/tts-play-queue'
 
@@ -87,7 +87,7 @@ export default function Home() {
             // TODO the endpoint should both handle LLM generation AND TTS on a per-sentence level.
             await append({role: 'user', content: input, id: nanoid(12)})
 
-        }, [history, isTortoiseOn])
+        }, [messages, isTortoiseOn])
 
 
     useEffect(() => {
@@ -104,11 +104,14 @@ export default function Home() {
             setInput('')
         }
 
+        // FIXME this might not work since messages might not change
     }, [state, messages, fullMessage])
 
     // Callback for when a buffer of audio is received & needs to be transcribed
     const onSegmentReceived = useCallback(
         async (buffer: Buffer) => {
+
+            console.log(`received audio segment of length`, buffer.byteLength, ` bytes`)
             if (buffer.length) {
                 send({type: StateMachineEvent.SegmentReceived})
             }
@@ -123,35 +126,66 @@ export default function Home() {
                 })
             }
         },
-        [history]
+        // FIXME this may not wory since the array might not change
+        [messages]
     )
 
     // Set up the worker for recorder and audio processing
     async function setupAudioWorker() {
 
-        const stream = await navigator.mediaDevices.getUserMedia({audio: true})
-        const context = new AudioContext()
-        const source = context.createMediaStreamSource(stream)
-
-        await context.audioWorklet.addModule('/worklet-processor.js')
-        const recorderNode = new WorkletNode(
-            context,
-            onSegmentReceived,
-            () => send({type: StateMachineEvent.Silence}),
-            () => send({type: StateMachineEvent.Sound})
-        )
-
-        // @ts-ignore
-        recorderNodeRef.current = recorderNode
-        source.connect(recorderNode)
-        recorderNode.connect(context.destination)
-        // @ts-ignore
-        playQueueRef.current = new PlayQueue(context, setBotIndicators)
-
     }
 
     // Load the worker once the page loads
-    useEffect(() => {setupAudioWorker()}, [])
+    useEffect(() => {
+        console.log(`loading the worker`)
+        class WorkletNode extends AudioWorkletNode {
+            // @ts-expect-error
+            constructor(context, onSegmentRecv, onSilence, onTalking) {
+                super(context, 'worklet-processor')
+                this.port.onmessage = (event) => {
+                    if (event.data.type === 'segment') {
+                        onSegmentRecv(event.data.buffer)
+                    }
+                    else if (event.data.type === 'silence') {
+                        onSilence()
+                    }
+                    else if (event.data.type === 'talking') {
+                        onTalking()
+                    }
+                }
+            }
+
+            stop()  {
+                this.port.postMessage({type: 'stop'})
+            }
+
+            start() {
+                this.port.postMessage({type: 'start'})
+            }
+        }
+        (async function () {
+            console.log(`setting it up`)
+            const stream = await navigator.mediaDevices.getUserMedia({audio: true})
+            const context = new AudioContext()
+            const source = context.createMediaStreamSource(stream)
+
+            await context.audioWorklet.addModule('worklet-processor.js')
+            const recorderNode = new WorkletNode(
+                context,
+                onSegmentReceived,
+                () => send({type: StateMachineEvent.Silence}),
+                () => send({type: StateMachineEvent.Sound})
+            )
+
+            // @ts-ignore
+            recorderNodeRef.current = recorderNode
+            source.connect(recorderNode)
+            recorderNode.connect(context.destination)
+            // @ts-ignore
+            playQueueRef.current = new PlayQueue(context, setBotIndicators)
+            console.log(`finished setting everything up`)
+        })()
+    }, [])
 
     // Set up a callback to handle difference betweeen audio & typing
     const tick = useCallback(() => {

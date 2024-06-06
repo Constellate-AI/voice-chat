@@ -15,24 +15,17 @@ export async function POST(request: Request): Promise<Response> {
 
     const body = await request.blob()
 
-    const temp = await tmp.file({postfix: '.wav'})
+    const fileName = `/tmp/` + nanoid(12) + '.wav'
 
-    await fs.writeFile(temp.path, new Uint8Array(await body.arrayBuffer()))
-    const fp = spawn('ffmpeg', [
-        '-i', temp.path,
-        '-f', 'f32le',
-        '-acodec', 'pcm_f32le',
-        '-ac', '1',
-        '-ar', '48000',
-        '-'
-    ])
+    await fs.writeFile(fileName, new Uint8Array(await body.arrayBuffer()))
+    console.log(`wrote file to `, fileName)
 
     const transcription = await openai.audio.transcriptions.create({
         model: 'whisper-1',
-        file: new File([body], 'recordingw.mp3')
+        file: new File([body], 'recording.wav')
     })
 
-    await temp.cleanup()
+    //await temp.cleanup()
     console.log(`transcription`, transcription)
     return Response.json({text: transcription.text})
 }

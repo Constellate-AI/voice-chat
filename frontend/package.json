@@ -12,6 +12,7 @@
     "@ai-sdk/openai": "^0.0.18",
     "@radix-ui/react-avatar": "^1.0.4",
     "@radix-ui/react-slot": "^1.0.2",
+    "@types/audioworklet": "^0.0.55",
     "@xstate/react": "^4.1.1",
     "ai": "^3.1.22",
     "class-variance-authority": "^0.7.0",
