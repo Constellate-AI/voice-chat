@@ -6,7 +6,7 @@
 export async function fetchTranscript(buffer) {
     const blob = new Blob([buffer], { type: "audio/float32" });
 
-    console.log(`backend API: `, process.env.NEXT_PUBLIC_BACKEND_API_URL)
+    //console.log(`backend API: `, process.env.NEXT_PUBLIC_BACKEND_API_URL)
     const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/transcribe`, {
         method: "POST",
         body: blob,

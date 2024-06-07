@@ -2,13 +2,17 @@
 import type {FC} from 'react'
 import {Textarea} from '@/components/ui/textarea'
 import {Button} from '@/components/ui/button'
-import {SendIcon} from 'lucide-react'
+import {MicIcon, MicOffIcon, SendIcon} from 'lucide-react'
 import type {UseChatHelpers} from 'ai/react'
+import {cn} from '@/lib/utils'
+import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from '@/components/ui/tooltip'
 
-export const PromptForm: FC<Partial<UseChatHelpers>> = ({
+export const PromptForm: FC<Partial<UseChatHelpers> & {isMicOn: boolean, setIsMicOn: (b: boolean) => void}> = ({
     handleInputChange,
     handleSubmit,
-    input
+    input,
+    setIsMicOn,
+    isMicOn
 }) => {
     return (
         <div className={' dark:bg-gray-950 p-4 w-full'}>
@@ -19,12 +23,38 @@ export const PromptForm: FC<Partial<UseChatHelpers>> = ({
                     value={input}
                     onChange={handleInputChange}
                 />
-                <form onSubmit={handleSubmit} className={'cursor-pointer'}>
-                    <Button className={'cursor-pointer z-10'} >
-                        <SendIcon className={'w-5 h-5'}/>
-                        <span className={'sr-only'}>Send</span>
-                    </Button>
-                </form>
+                <div className={'flex flex-col gap-2'}>
+                    <form onSubmit={handleSubmit} className={'cursor-pointer'}>
+                        <Button className={'cursor-pointer z-10'}>
+                            <SendIcon className={'w-5 h-5'}/>
+                            <span className={'sr-only'}>Send</span>
+                        </Button>
+                    </form>
+
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild={true}>
+                                <Button
+                                    type={'button'}
+                                    className={cn(
+                                        'cursor-pointer z-10',
+                                        isMicOn ? 'bg-black ' : 'bg-red-500 hover:bg-red-600'
+                                    )}
+                                    onClick={() => setIsMicOn(!isMicOn)}>
+                                    {isMicOn
+                                        ? <MicIcon className={'h-5 w-5'}/>
+                                        : <MicOffIcon className={'h-5 w-5'}/>
+                                    }
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                {isMicOn ? 'Turn microphone off' : 'Turn microphone on'}
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+
+                </div>
+
 
             </div>
 

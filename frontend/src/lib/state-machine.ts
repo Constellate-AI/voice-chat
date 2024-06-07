@@ -197,7 +197,9 @@ export const chatMachine = createMachine(
             //  have a non-zero-length transcript
             [StateMachineGuard.CanGenerate]: ({context}) => {
                 console.log(`CanGenerate guard running with context`, context)
-                return context.pendingSegments === 0 && context.transcript.length > 0
+                const canGenerate = context.pendingSegments === 0 && context.transcript.length > 0
+                console.log(`GUARD can generate?`, canGenerate, context.pendingSegments, context.transcript.length)
+                return canGenerate
             }
         }
     }

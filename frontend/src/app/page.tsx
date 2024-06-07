@@ -59,8 +59,8 @@ export default function Home() {
                 inspectionEvent.type === '@xstate.event' &&
                 inspectionEvent.event.type === StateMachineEvent.TranscriptReceived
             ) {
-                console.log(`Transcript received!`)
-                setFullMessage(
+                console.log(`Transcript received!`, inspectionEvent.event.transcript)
+                setInput(
                     (m) => m + (m
                             ? inspectionEvent.event.transcript
                             : inspectionEvent.event.transcript?.trimStart()
@@ -72,10 +72,9 @@ export default function Home() {
 
     // Subscribe to events & state transition the state machine
     useEffect(() => {
-        console.log(`effect!`)
 
         const subscription = service.subscribe((snapshot) => {
-            console.log(`snapshot`, snapshot)
+            console.log(`snapshot`, snapshot.value)
         })
         return subscription.unsubscribe;
     }, [service]);
@@ -84,28 +83,42 @@ export default function Home() {
     // We will use the Vercel AI SDK
     const generateResponse = useCallback(
         async (noop: boolean, input: string = '') => {
+
+            if (!input) return
+            if (!noop) {
+                recorderNodeRef.current.stop()
+            }
+            console.log(`generating response`, input, messages)
             // TODO the endpoint should both handle LLM generation AND TTS on a per-sentence level.
+
+            // FIXME
+            console.log(`running "generateResponse" with string `, input)
             await append({role: 'user', content: input, id: nanoid(12)})
 
         }, [messages, isTortoiseOn])
 
 
     useEffect(() => {
-        console.log(`messages changed`, messages)
+
         const transition = state.context.messages > messages.length + 1;
         if (transition && state.matches(StateMachineState.BotGenerating)) {
-            generateResponse(/*Noop =*/ false, fullMessage)
+            console.log(`can generate`)
+            generateResponse(/*Noop =*/ false, input)
+        }
+        else {
+            console.log(`can't generate`)
+            console.log(transition)
+            console.log(state.matches(StateMachineState.BotGenerating))
         }
 
         if (transition) {
             // we already appended the message to history
             // append({role: 'user', content: input, id: nanoid(12)})
-            setFullMessage('')
             setInput('')
         }
 
         // FIXME this might not work since messages might not change
-    }, [state, messages, fullMessage])
+    }, [state, messages, input])
 
     // Callback for when a buffer of audio is received & needs to be transcribed
     const onSegmentReceived = useCallback(
@@ -130,14 +143,8 @@ export default function Home() {
         [messages]
     )
 
-    // Set up the worker for recorder and audio processing
-    async function setupAudioWorker() {
-
-    }
-
     // Load the worker once the page loads
     useEffect(() => {
-        console.log(`loading the worker`)
         class WorkletNode extends AudioWorkletNode {
             // @ts-expect-error
             constructor(context, onSegmentRecv, onSilence, onTalking) {
@@ -164,7 +171,6 @@ export default function Home() {
             }
         }
         (async function () {
-            console.log(`setting it up`)
             const stream = await navigator.mediaDevices.getUserMedia({audio: true})
             const context = new AudioContext()
             const source = context.createMediaStreamSource(stream)
@@ -173,8 +179,14 @@ export default function Home() {
             const recorderNode = new WorkletNode(
                 context,
                 onSegmentReceived,
-                () => send({type: StateMachineEvent.Silence}),
-                () => send({type: StateMachineEvent.Sound})
+                () => {
+                    console.log(`sending SILENCE detected event`)
+                    return send({type: StateMachineEvent.Silence})
+                },
+                () => {
+                    console.log(`sending TALKING Detected event`)
+                    return send({type: StateMachineEvent.Sound})
+                }
             )
 
             // @ts-ignore
@@ -186,26 +198,6 @@ export default function Home() {
             console.log(`finished setting everything up`)
         })()
     }, [])
-
-    // Set up a callback to handle difference betweeen audio & typing
-    const tick = useCallback(() => {
-        if (!recorderNodeRef.current) return;
-
-        if (input.length < fullMessage.length) {
-            const n = 1;
-            setInput(input.substring(0, input.length + n))
-
-            if (input.length + n === fullMessage.length) {
-                send({type: StateMachineEvent.TypingDone})
-            }
-        }
-    }, [input, fullMessage])
-
-    // schedule it on an interval
-    useEffect(() => {
-        const intervalId = setInterval(tick, 20);
-        return () => clearInterval(intervalId)
-    }, []);
 
     // Start/stop the recorder when the mic goes on or off
     useEffect(() => {
@@ -270,7 +262,13 @@ export default function Home() {
 
             {/* Toolbar*/}
             <section className={'w-full bg-gray-200 dark:bg-gray-950 p-4 flex flex-row items-center gap-2'}>
-                <PromptForm input={input} handleInputChange={handleInputChange} handleSubmit={handleSubmit}/>
+                <PromptForm
+                    input={input}
+                    handleInputChange={handleInputChange}
+                    handleSubmit={handleSubmit}
+                    isMicOn={isMicOn}
+                    setIsMicOn={setIsMicOn}
+                />
             </section>
 
         </main>

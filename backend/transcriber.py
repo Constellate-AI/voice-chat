@@ -6,7 +6,7 @@ from openai import OpenAI
 import os
 from dotenv import load_dotenv
 
-ßload_dotenv()
+load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
@@ -23,7 +23,7 @@ def transcribe(audio_data: bytes):
     )
     print(transcription.text)
 
-    return {'text': 'test'}
+    return {'text': transcription.text}
 
 
 def load_audio(data: bytes, sr: int = 16000):
