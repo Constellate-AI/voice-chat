@@ -33,7 +33,8 @@ export enum StateMachineGuard {
 }
 
 export enum StateMachineDelay {
-    SilentDelay = seconds(4)
+    SilentDelay = seconds(4),
+    UserTalkingDelayForSilentSignalMissed = seconds(3)
 }
 
 export interface StateMachineContext {
@@ -115,6 +116,12 @@ export const chatMachine = createMachine(
                     // When the user is talking and a TRANSCRIPT is received, handle the received transcript
                     [StateMachineEvent.TranscriptReceived]: {
                         actions: StateMachineAction.TranscriptReceive
+                    }
+                },
+                after: {
+                    [StateMachineDelay.UserTalkingDelayForSilentSignalMissed]: {
+                        target: StateMachineState.BotGenerating,
+                        guard: StateMachineGuard.CanGenerate
                     }
                 }
             },

@@ -9,6 +9,12 @@ export const metadata: Metadata = {
     description: "Created by Constellate AI",
 };
 
+import {Sora} from 'next/font/google'
+
+const sora = Sora({
+    subsets: ['latin']
+})
+
 export default function RootLayout({
     children,
 }: Readonly<{
@@ -18,7 +24,7 @@ export default function RootLayout({
         <html lang="en">
         <body
             className={cn('min-h-screen bg-background font-sans antialiased w-full')}
-            style={inter.style}
+            style={sora.style}
         >
         {children}
         </body>

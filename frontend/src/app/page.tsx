@@ -13,6 +13,7 @@ import {fetchTranscript} from '@/lib/audio/transcription'
 import {PlayQueue} from '@/lib/audio/tts-play-queue'
 import {INDICATOR_TYPE} from '@/lib/audio/tts-play-queue'
 
+
 export default function Home() {
 
     // Configure Vercel AI SDK with initial messages, configs etc
@@ -28,7 +29,7 @@ export default function Home() {
         initialMessages: [
             {
                 role: 'assistant',
-                content: 'Hi! I\'m a conversational AI model. You can talk to me through your microphone - just make sure that your volume is turned up!',
+                content: 'Hi! I\'m a conversational AI model. My name is Iris. You can talk to me through your microphone - just make sure that your volume is turned up!',
                 id: nanoid(12)
             }
         ]
@@ -40,7 +41,6 @@ export default function Home() {
     const [botIndicators, setBotIndicators] = useState({});
 
     // Ref for the play queue to do the TTS
-    const [fullMessage, setFullMessage] = useState('');
     const playQueueRef = useRef(null)
     const [isTortoiseOn, setIsTortoiseOn] = useState(false);
 
@@ -86,39 +86,40 @@ export default function Home() {
 
             if (!input) return
             if (!noop) {
-                recorderNodeRef.current.stop()
+                // @ts-expect-error
+                recorderNodeRef.current?.stop()
             }
             console.log(`generating response`, input, messages)
             // TODO the endpoint should both handle LLM generation AND TTS on a per-sentence level.
 
             // FIXME
             console.log(`running "generateResponse" with string `, input)
+            setIsMicOn(false)
             await append({role: 'user', content: input, id: nanoid(12)})
+            console.log(`Sending "Generation done"`)
+            setInput('')
+            send({type: StateMachineEvent.GenerationDone})
+            setIsMicOn(true)
 
         }, [messages, isTortoiseOn])
 
 
     useEffect(() => {
 
-        const transition = state.context.messages > messages.length + 1;
-        if (transition && state.matches(StateMachineState.BotGenerating)) {
+        if (input && state.matches(StateMachineState.BotGenerating)) {
             console.log(`can generate`)
             generateResponse(/*Noop =*/ false, input)
         }
         else {
             console.log(`can't generate`)
-            console.log(transition)
+            console.log(`input`, input)
+            console.log(`history`, messages, messages.length)
             console.log(state.matches(StateMachineState.BotGenerating))
         }
 
-        if (transition) {
-            // we already appended the message to history
-            // append({role: 'user', content: input, id: nanoid(12)})
-            setInput('')
-        }
 
         // FIXME this might not work since messages might not change
-    }, [state, messages, input])
+    }, [state, input])
 
     // Callback for when a buffer of audio is received & needs to be transcribed
     const onSegmentReceived = useCallback(
@@ -242,7 +243,7 @@ export default function Home() {
         //  Header Bar
         <main className={'flex min-h-screen max-h-screen flex-col items-center justify-between w-screen'}>
             <header className={'bg-gray-900 text-white py-4 px-6 flex items-center justify-between w-full'}>
-                <h1 className={'text-xl font-bold'}> Private Siri</h1>
+                <h1 className={'text-xl font-extrabold text-[36px] tracking-tighter'}> iris</h1>
                 <div className={'flex flex-row items-center gap-4'}>
                     {/*<Button variant={'ghost'} size={'icon'}>
                         <SettingsIcon className={'h-5 w-5'}/>
