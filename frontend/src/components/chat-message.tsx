@@ -1,15 +1,16 @@
 import type {FC} from 'react'
 import type {Message} from 'ai'
 import {cn} from '@/lib/utils'
-import {inter} from '@/lib/fonts'
+import {sora} from '@/lib/fonts'
 import {Avatar, AvatarFallback, AvatarImage} from '@/components/ui/avatar'
+import {EnhancedMarkdown} from '@/components/enhanced-markdown'
 
 export const ChatMessage: FC<{ message: Message }> = ({message}) => {
     return (
         <div className={cn(
             'flex items-start gap-4 w-full',
             message.role === 'assistant' ? 'flex-row' : 'flex-row-reverse'
-        )} style={inter.style}>
+        )} style={sora.style}>
 
             {/* Avatar / profile image*/}
             <Avatar className={'w-10 h-10 border bg-gray-200 shadow-lg'}>
@@ -23,7 +24,10 @@ export const ChatMessage: FC<{ message: Message }> = ({message}) => {
                     ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white'
                     : 'bg-blue-500 text-white '
             )}>
-                {message.content}
+                <EnhancedMarkdown>
+                    {message.content}
+                </EnhancedMarkdown>
+
             </div>
         </div>
     )

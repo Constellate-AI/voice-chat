@@ -1,6 +1,6 @@
 'use client'
 import {Avatar, AvatarFallback, AvatarImage} from '@/components/ui/avatar'
-import {inter} from '@/lib/fonts'
+import { sora} from '@/lib/fonts'
 import {ChatMessageList} from '@/components/chat-message-list'
 import {PromptForm} from '@/components/prompt-form'
 import {useChat} from 'ai/react'
@@ -249,7 +249,7 @@ export default function Home() {
                         <SettingsIcon className={'h-5 w-5'}/>
                         <span className={'src-only'}>Settings</span>
                     </Button>*/}
-                    <Avatar className={'w-8 h-8 border'} style={inter.style}>
+                    <Avatar className={'w-8 h-8 border'} style={sora.style}>
                         <AvatarImage src={'/placeholder.svg'} alt={'avatar'}/>
                         <AvatarFallback className={'text-gray-900'}>KM</AvatarFallback>
                     </Avatar>
