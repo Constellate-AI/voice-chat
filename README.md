@@ -50,3 +50,14 @@ cd whisper.cpp
   --host 0.0.0.0
   --port 9001 
 ```
+
+Or, for better quality:
+```shell
+make medium.en  # bigger, higher-quality model
+./server \ 
+  --prompt 'User input is presented as text.' \
+  --host 0.0.0.0 \
+  --port 9001 \
+  --model models/ggml-medium.en.bin
+  
+```
