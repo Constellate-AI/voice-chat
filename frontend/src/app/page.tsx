@@ -12,6 +12,9 @@ import {fetchTranscript} from '@/lib/audio/transcription'
 //import WorkletNode from '@/lib/audio/worklet-node'
 import {PlayQueue} from '@/lib/audio/tts-play-queue'
 import {INDICATOR_TYPE} from '@/lib/audio/tts-play-queue'
+import {useLocalStorage} from '@/lib/hooks/use-local-storage'
+import {Simulate} from 'react-dom/test-utils'
+import play = Simulate.play
 
 
 export default function Home() {
@@ -25,6 +28,7 @@ export default function Home() {
         append,
         handleInputChange,
         handleSubmit,
+        data
     } = useChat({
         initialMessages: [
             {
@@ -32,17 +36,45 @@ export default function Home() {
                 content: 'Hi! I\'m a conversational AI model. My name is Iris. You can talk to me through your microphone - just make sure that your volume is turned up!',
                 id: nanoid(12)
             }
-        ]
+        ],
     });
+
+    // when the "data" object (events sent from the server with the LLM data) are received, then push them off to the TTS API
+    useEffect(() => {
+
+        // Handle new Sentence SSEs
+        if (data && data?.length) {
+            // @ts-expect-error
+            const sentence = data[data.length - 1]?.sentence
+            console.log(`new sentences`, sentence)
+
+            // if TTS is on, call the model and then ship it
+            if (isTtsOn) {
+                console.log(`Triggering speech synthesis`)
+                    //playQueueRef.current?.add([sentence, messages.length + 1, true])
+            }
+
+            // Otherwise, have it use speech synthesis
+            else {
+                console.log(`triggering synthesis`)
+
+                // @ts-expect-error
+                playQueueRef.current?.add([sentence, history.length + 1, false]);
+            }
+        }
+        // Call python backend with transcription
+    }, [data?.length]);
 
     // Ref for the recorder that handles getting the user mic & state for mic
     const recorderNodeRef = useRef(null);
-    const [isMicOn, setIsMicOn] = useState(true);
+    const [isMicOn, setIsMicOn, _checkedLocalStorageForValue] = useLocalStorage('iris_enable_microphone', true);
     const [botIndicators, setBotIndicators] = useState({});
 
     // Ref for the play queue to do the TTS
     const playQueueRef = useRef(null)
-    const [isTortoiseOn, setIsTortoiseOn] = useState(false);
+
+    // false
+    const [isTtsOn, setIsTtsOn] = useState(false);
 
     // Set up the state machine we created with XState
     const [
@@ -86,6 +118,7 @@ export default function Home() {
 
             if (!input) return
             if (!noop) {
+                // Turn the mic off
                 // @ts-expect-error
                 recorderNodeRef.current?.stop()
             }
@@ -94,27 +127,29 @@ export default function Home() {
 
             // FIXME
             console.log(`running "generateResponse" with string `, input)
-            setIsMicOn(false)
             await append({role: 'user', content: input, id: nanoid(12)})
             console.log(`Sending "Generation done"`)
             setInput('')
             send({type: StateMachineEvent.GenerationDone})
-            setIsMicOn(true)
 
-        }, [messages, isTortoiseOn])
+            // Turn the mic back on
+            // @ts-expect-error
+            recorderNodeRef.current?.start()
+
+        }, [messages, isTtsOn])
 
 
     useEffect(() => {
 
         if (input && state.matches(StateMachineState.BotGenerating)) {
-            console.log(`can generate`)
+            //console.log(`can generate`)
             generateResponse(/*Noop =*/ false, input)
         }
         else {
-            console.log(`can't generate`)
-            console.log(`input`, input)
-            console.log(`history`, messages, messages.length)
-            console.log(state.matches(StateMachineState.BotGenerating))
+            //console.log(`can't generate`)
+            //console.log(`input`, input)
+            //console.log(`history`, messages, messages.length)
+            //console.log(state.matches(StateMachineState.BotGenerating))
         }
 
 
@@ -125,7 +160,7 @@ export default function Home() {
     const onSegmentReceived = useCallback(
         async (buffer: Buffer) => {
 
-            console.log(`received audio segment of length`, buffer.byteLength, ` bytes`)
+            //console.log(`received audio segment of length`, buffer.byteLength, ` bytes`)
             if (buffer.length) {
                 send({type: StateMachineEvent.SegmentReceived})
             }
@@ -216,15 +251,16 @@ export default function Home() {
         }
     }, [isMicOn]);
 
+
     // if TTS is off, clear the play queue for it
     useEffect(() => {
-        if (playQueueRef.current && !isTortoiseOn) {
+        if (playQueueRef.current && !isTtsOn) {
             console.log(`cancelling future audio calls`)
 
             // @ts-ignore
             playQueueRef.current.clear()
         }
-    }, [isTortoiseOn]);
+    }, [isTtsOn]);
 
     let userIndicator = INDICATOR_TYPE.IDLE
     const userIsLast = messages.length % 2 === 1

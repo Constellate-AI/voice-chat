@@ -14,16 +14,45 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def transcribe(audio_data: bytes):
     print('transcribing')
-    fp = load_audio(audio_data)
-    print('filepath', fp)
+
+
+
+    try:
+        fp = tempfile.NamedTemporaryFile(delete_on_close=False, delete=False, suffix=".wav", dir="/tmp", )
+        transformed_fp = tempfile.NamedTemporaryFile(delete_on_close=False, delete=False, suffix='.transformed.wav',
+                                                     dir='/tmp')
+        transformed_fp.close()
+        # write the audio/float32 to a WAV file noting that it won't work
+        fp.write(audio_data)
+        fp.close()
+
+        print('temp file', transformed_fp.name)
+
+        out, _ = (ffmpeg.input(
+            fp.name,
+            threads=0,
+            format='f32le',
+            acodec="pcm_f32le",
+            ac=1,
+            ar="24k",
+        )
+            .output(
+                '/tmp/output.wav',
+                **{
+                    'c:a': 'pcm_s16le', # required for whisper.cpp
+                    'ar': '16k' # required for whisper.cpp
+                }
+            ) #  **{'b:a': '48k'}
+            .run(cmd=['ffmpeg', '-nostdin'],
+                 capture_stdout=True,
+                 capture_stderr=True)
+            )
+        print('ffmpeg done')
+    except ffmpeg.Error as e:
+        raise RuntimeError(f"Failed to load audio: {e.stderr.decode()}") from e
 
     # TODO use local whisper
-    audio_file = open(fp, "rb")
-    #transcription = client.audio.transcriptions.create(
-    #    model="whisper-1",
-    #    file=audio_file
-    #)
-    #print(transcription.text)
+    audio_file = open('/tmp/output.wav', "rb")
 
     # try with local whisper
     whisper_api_url = f'{os.getenv("WHISPER_API_URL")}/inference'
@@ -35,8 +64,13 @@ def transcribe(audio_data: bytes):
             'file': ('file.wav', audio_file),
             'temperature': (None, '0.0'),
             'temperature_step': (None, '0.2')
-        }
+        },
+
     )
+    audio_file.close()
+    os.remove('/tmp/output.wav')
+    os.remove(fp.name)
+
 
     print('response', whisper_response.json())
 

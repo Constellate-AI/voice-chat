@@ -9,7 +9,6 @@ app.add_middleware(CORSMiddleware,
                    allow_headers=["*"],
                    )
 
-
 @app.get('/')
 async def root():
     return {'message': 'hello world'}
