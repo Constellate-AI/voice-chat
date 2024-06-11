@@ -122,6 +122,7 @@ export default function Home() {
                 inspectionEvent.event.type === StateMachineEvent.TranscriptReceived
             ) {
                 console.log(`Transcript received!`, inspectionEvent.event.transcript)
+                console.log(`current input`, input)
                 setInput(input + inspectionEvent.event.transcript?.trimStart())
                 console.log({state})
             }

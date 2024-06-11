@@ -119,6 +119,8 @@ export const chatMachine = createMachine(
                     }
                 },
                 after: {
+
+                    // FIXME this causes long messages to be truncated early.
                     [StateMachineDelay.UserTalkingDelayForSilentSignalMissed]: {
                         target: StateMachineState.BotGenerating,
                         guard: StateMachineGuard.CanGenerate
