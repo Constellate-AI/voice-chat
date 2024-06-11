@@ -13,8 +13,6 @@ import {fetchTranscript} from '@/lib/audio/transcription'
 import {PlayQueue} from '@/lib/audio/tts-play-queue'
 import {INDICATOR_TYPE} from '@/lib/audio/tts-play-queue'
 import {useLocalStorage} from '@/lib/hooks/use-local-storage'
-import {Simulate} from 'react-dom/test-utils'
-import play = Simulate.play
 
 
 export default function Home() {
@@ -24,7 +22,6 @@ export default function Home() {
         messages,
         input,
         setInput,
-        setMessages,
         append,
         handleInputChange,
         handleSubmit,
@@ -47,11 +44,42 @@ export default function Home() {
             // @ts-expect-error
             const sentence = data[data.length - 1]?.sentence
             console.log(`new sentences`, sentence)
+            if (data.length === 1) {
+                // If this is the first one, clear the existing queue
+                // @ts-expect-error
+                playQueueRef.current.clear();
+            }
 
             // if TTS is on, call the model and then ship it
             if (isTtsOn) {
                 console.log(`Triggering speech synthesis`)
-                    //playQueueRef.current?.add([sentence, messages.length + 1, true])
+                // Create a nanoid; and post the transcription API to trigger it
+
+                const sentenceId = nanoid(12)
+                fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/synthesize`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        text: sentence,
+                        id: sentenceId
+                    }),
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            console.log(`Queued transcription for ${sentenceId}`)
+                        }
+                        else {
+                            console.error(`failed to queue transcription for ${sentenceId}: ${response.statusText}`)
+
+                        }
+                    })
+                    .catch(err => {
+                        console.error(`Failed to queue transcription for ${sentenceId}: `, err.message)
+                    })
+
+                // @ts-expect-error
+                playQueueRef.current?.add([sentenceId, messages.length + 1, true])
+                console.log(`Added ${sentenceId} to the play queue`)
+
             }
 
             // Otherwise, have it use speech synthesis
@@ -67,14 +95,16 @@ export default function Home() {
 
     // Ref for the recorder that handles getting the user mic & state for mic
     const recorderNodeRef = useRef(null);
-    const [isMicOn, setIsMicOn, _checkedLocalStorageForValue] = useLocalStorage('iris_enable_microphone', true);
+    const [isMicOn, setIsMicOn] = useState(false);
+
+
     const [botIndicators, setBotIndicators] = useState({});
 
     // Ref for the play queue to do the TTS
     const playQueueRef = useRef(null)
 
     // false
-    const [isTtsOn, setIsTtsOn] = useState(false);
+    const [isTtsOn, setIsTtsOn] = useState(true);
 
     // Set up the state machine we created with XState
     const [
@@ -123,9 +153,6 @@ export default function Home() {
                 recorderNodeRef.current?.stop()
             }
             console.log(`generating response`, input, messages)
-            // TODO the endpoint should both handle LLM generation AND TTS on a per-sentence level.
-
-            // FIXME
             console.log(`running "generateResponse" with string `, input)
             await append({role: 'user', content: input, id: nanoid(12)})
             console.log(`Sending "Generation done"`)
@@ -134,7 +161,7 @@ export default function Home() {
 
             // Turn the mic back on
             // @ts-expect-error
-            recorderNodeRef.current?.start()
+            if (isMicOn) recorderNodeRef.current?.start()
 
         }, [messages, isTtsOn])
 

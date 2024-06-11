@@ -7,6 +7,7 @@ export const INDICATOR_TYPE = {
 };
 
 
+
 export class PlayQueue {
     constructor(audioContext, onChange) {
         this.call_ids = [];
@@ -59,15 +60,16 @@ export class PlayQueue {
 
         // TODO implement this API endpoint
         while (true) {
-            response = await fetch(`/audio/${call_id}`);
-            if (response.status === 202) {
+            console.log(`getting audio for ${call_id}...`)
+            response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/audio/${call_id}`);
+            if (response.status === 404) {
                 continue;
             } else if (response.status === 204) {
                 console.error("No audio found for call: " + call_id);
                 break;
             } else if (!response.ok) {
                 console.error("Error occurred fetching audio: " + response.status);
-            } else {
+            } else if (response.status === 200) {
                 success = true;
                 break;
             }
@@ -95,7 +97,7 @@ export class PlayQueue {
     clear() {
         for (const [call_id, _, isTts] of this.call_ids) {
             if (isTts) {
-                fetch(`/audio/${call_id}`, {method: "DELETE"});
+                fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/audio/${call_id}`, {method: "DELETE"});
             }
         }
         this.call_ids = [];
