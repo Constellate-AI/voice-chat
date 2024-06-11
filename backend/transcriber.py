@@ -13,20 +13,12 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
 def transcribe(audio_data: bytes):
-    print('transcribing')
-
-
 
     try:
-        fp = tempfile.NamedTemporaryFile(delete_on_close=False, delete=False, suffix=".wav", dir="/tmp", )
-        transformed_fp = tempfile.NamedTemporaryFile(delete_on_close=False, delete=False, suffix='.transformed.wav',
-                                                     dir='/tmp')
-        transformed_fp.close()
+        fp = tempfile.NamedTemporaryFile(delete=False, suffix=".wav", dir="/tmp", )
         # write the audio/float32 to a WAV file noting that it won't work
         fp.write(audio_data)
         fp.close()
-
-        print('temp file', transformed_fp.name)
 
         out, _ = (ffmpeg.input(
             fp.name,
