@@ -15,6 +15,11 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 def transcribe(audio_data: bytes):
 
     try:
+        os.remove('/tmp/output.wav')
+    except Exception as e:
+        print(e)
+
+    try:
         fp = tempfile.NamedTemporaryFile(delete=False, suffix=".wav", dir="/tmp", )
         # write the audio/float32 to a WAV file noting that it won't work
         fp.write(audio_data)
@@ -32,7 +37,7 @@ def transcribe(audio_data: bytes):
                 '/tmp/output.wav',
                 **{
                     'c:a': 'pcm_s16le', # required for whisper.cpp
-                    'ar': '16k' # required for whisper.cpp
+                    'ar': '16K' # required for whisper.cpp
                 }
             ) #  **{'b:a': '48k'}
             .run(cmd=['ffmpeg', '-nostdin'],
@@ -60,7 +65,7 @@ def transcribe(audio_data: bytes):
 
     )
     audio_file.close()
-    os.remove('/tmp/output.wav')
+
     os.remove(fp.name)
 
 

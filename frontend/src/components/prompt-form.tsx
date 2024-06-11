@@ -2,17 +2,17 @@
 import type {FC} from 'react'
 import {Textarea} from '@/components/ui/textarea'
 import {Button} from '@/components/ui/button'
-import {MicIcon, MicOffIcon, SendIcon} from 'lucide-react'
+import {MicIcon, MicOffIcon, SendIcon, MessageCircleXIcon} from 'lucide-react'
 import type {UseChatHelpers} from 'ai/react'
 import {cn} from '@/lib/utils'
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from '@/components/ui/tooltip'
 
-export const PromptForm: FC<Partial<UseChatHelpers> & {isMicOn: boolean, setIsMicOn: (b: boolean) => void}> = ({
+export const PromptForm: FC<Partial<UseChatHelpers> & {isMicOn: boolean, setIsMicOn: (b: boolean) => void, clear: () => void}> = ({
     handleInputChange,
     handleSubmit,
     input,
     setIsMicOn,
-    isMicOn
+    isMicOn,
 }) => {
     return (
         <div className={' dark:bg-gray-950 p-4 w-full'}>
@@ -23,35 +23,43 @@ export const PromptForm: FC<Partial<UseChatHelpers> & {isMicOn: boolean, setIsMi
                     value={input}
                     onChange={handleInputChange}
                 />
-                <div className={'flex flex-col gap-2'}>
-                    <form onSubmit={handleSubmit} className={'cursor-pointer'}>
-                        <Button className={'cursor-pointer z-10'}>
-                            <SendIcon className={'w-5 h-5'}/>
-                            <span className={'sr-only'}>Send</span>
-                        </Button>
-                    </form>
+                <div className={'grid grid-cols-2 gap-2'}>
+                    <div className={'col-span-1 flex flex-col gap-2'}>
+                        <form onSubmit={handleSubmit} className={'cursor-pointer'}>
+                            <Button className={'cursor-pointer z-10'}>
+                                <SendIcon className={'w-5 h-5'}/>
+                                <span className={'sr-only'}>Send</span>
+                            </Button>
+                        </form>
 
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild={true}>
-                                <Button
-                                    type={'button'}
-                                    className={cn(
-                                        'cursor-pointer z-10',
-                                        isMicOn ? 'bg-black ' : 'bg-red-500 hover:bg-red-600'
-                                    )}
-                                    onClick={() => setIsMicOn(!isMicOn)}>
-                                    {isMicOn
-                                        ? <MicIcon className={'h-5 w-5'}/>
-                                        : <MicOffIcon className={'h-5 w-5'}/>
-                                    }
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                {isMicOn ? 'Turn microphone off' : 'Turn microphone on'}
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild={true}>
+                                    <Button
+                                        type={'button'}
+                                        className={cn(
+                                            'cursor-pointer z-10',
+                                            isMicOn ? 'bg-black ' : 'bg-red-500 hover:bg-red-600'
+                                        )}
+                                        onClick={() => setIsMicOn(!isMicOn)}>
+                                        {isMicOn
+                                            ? <MicIcon className={'h-5 w-5'}/>
+                                            : <MicOffIcon className={'h-5 w-5'}/>
+                                        }
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    {isMicOn ? 'Turn microphone off' : 'Turn microphone on'}
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+
+                    </div>
+                    <div className={'col-span-1 flex flex-col gap-2'}>
+                        <Button onClick={() => {}}>
+                            <MessageCircleXIcon className={'w-5 h-5'}/>
+                        </Button>
+                    </div>
 
                 </div>
 

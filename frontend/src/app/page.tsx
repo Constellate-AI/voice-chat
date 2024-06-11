@@ -332,6 +332,7 @@ export default function Home() {
                     handleSubmit={handleSubmit}
                     isMicOn={isMicOn}
                     setIsMicOn={setIsMicOn}
+                    // @ts-expect-error
                 />
             </section>
 
