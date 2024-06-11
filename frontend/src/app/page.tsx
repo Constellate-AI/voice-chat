@@ -95,7 +95,7 @@ export default function Home() {
 
     // Ref for the recorder that handles getting the user mic & state for mic
     const recorderNodeRef = useRef(null);
-    const [isMicOn, setIsMicOn] = useState(false);
+    const [isMicOn, setIsMicOn] = useState(true);
 
 
     const [botIndicators, setBotIndicators] = useState({});
@@ -259,7 +259,10 @@ export default function Home() {
             // @ts-ignore
             playQueueRef.current = new PlayQueue(context, setBotIndicators)
             console.log(`finished setting everything up`)
+            setIsMicOn(false)
+            console.log(`turning mic off...`)
         })()
+
     }, [])
 
     // Start/stop the recorder when the mic goes on or off
