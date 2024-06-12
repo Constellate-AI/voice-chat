@@ -149,16 +149,16 @@ export default function Home() {
                 // @ts-expect-error
                 recorderNodeRef.current?.stop()
             }
+            setIsMicOn(false)
             console.log(`generating response`, input, messages)
             console.log(`running "generateResponse" with string `, input)
             await append({role: 'user', content: input, id: nanoid(12)})
             console.log(`Sending "Generation done"`)
             setInput('')
             send({type: StateMachineEvent.GenerationDone})
-
+            setIsMicOn(true)
             // Turn the mic back on
             // @ts-expect-error
-            if (isMicOn) recorderNodeRef.current?.start()
 
         }, [messages, isTtsOn])
 
@@ -332,7 +332,6 @@ export default function Home() {
                     handleSubmit={handleSubmit}
                     isMicOn={isMicOn}
                     setIsMicOn={setIsMicOn}
-                    // @ts-expect-error
                 />
             </section>
 

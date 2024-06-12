@@ -7,7 +7,7 @@ import type {UseChatHelpers} from 'ai/react'
 import {cn} from '@/lib/utils'
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from '@/components/ui/tooltip'
 
-export const PromptForm: FC<Partial<UseChatHelpers> & {isMicOn: boolean, setIsMicOn: (b: boolean) => void, clear: () => void}> = ({
+export const PromptForm: FC<Partial<UseChatHelpers> & {isMicOn: boolean, setIsMicOn: (b: boolean) => void}> = ({
     handleInputChange,
     handleSubmit,
     input,
